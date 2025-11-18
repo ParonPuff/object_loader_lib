@@ -10,13 +10,21 @@ option(MATLIB_BUILD_TESTS "Build tests in deps/matlib" OFF)
 # Option: build object loader tests?
 option(BUILD_TESTING "Build object loader tests" ON)
 
-# Add the dependency library (header-only)
+# Add matlib dependency
 add_subdirectory(deps/matlib)
 
-# Add the obj loader library
-add_subdirectory(src)
+# Build objloader library
+add_library(objloader
+    src/obj_loader.cpp
+)
 
-# Add tests only for the object loader
+target_include_directories(objloader PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(objloader PUBLIC matlib)
+
+# Tests
 if (BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)

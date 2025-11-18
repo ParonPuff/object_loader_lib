@@ -9,7 +9,7 @@ FetchContent_MakeAvailable(Catch2)
 
 add_executable(test_obj test_obj.cpp)
 
-target_link_libraries(test_obj PRIVATE objloader Catch2::Catch2WithMain)
+target_link_libraries(test_obj PUBLIC objloader Catch2::Catch2WithMain)
 
 # Pass the fixtures path to tests
 target_compile_definitions(test_obj PRIVATE
