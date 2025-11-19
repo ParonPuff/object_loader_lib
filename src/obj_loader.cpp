@@ -1,4 +1,4 @@
-#include "obj_loader.hpp"
+#include "../include/obj_loader.hpp"
 #include <cstdint>
 #include <fstream>
 #include <sstream>

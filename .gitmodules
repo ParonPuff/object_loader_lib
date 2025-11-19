@@ -1,3 +1,3 @@
-[submodule "deps/matlib"]
-	path = deps/matlib
+[submodule "deps/matvec"]
+	path = deps/matvec
 	url = git@github.com:ParonPuff/matvec_lib.git

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
-#include <type.hpp>
+#include <types.hpp>
 
 struct Mesh{
   std::vector<matvec::vec3> positions;
