@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 Mesh ObjLoader::load(const std::string &path, bool normalize) {
   Mesh mesh;
@@ -65,13 +66,50 @@ Mesh ObjLoader::load(const std::string &path, bool normalize) {
 }
 
 void ObjLoader::computeUV(Mesh &mesh) {
-  for (auto p : mesh.positions) {
-    matvec::vec3 norm_p = p.normalized();
+  for (int i = 0; i < mesh.positions.size(); i++) {
+    matvec::vec3 V0 = mesh.positions[i];
+    matvec::vec3 N  = mesh.normals[i].normalized();
 
-    float u = 0.5f + atan2(p.z, p.x) / (2.0f * M_PI);
-    float v = 0.5f - asin(p.y) / M_PI;
+    float r = 1.0f; // sphere radius (larger than object)
 
-    mesh.uv.emplace_back(matvec::vec2(u, v));
+    // --- Second step: intersect normal ray with intermediate sphere ---
+    // Ray: P = V0 + d*N
+    // Sphere: P·P = r²  =>  ad² + bd + c = 0
+    float a = N.dot(N);           // = 1 if N is normalized
+    float b = 2.0f * V0.dot(N);
+    float c = V0.dot(V0) - r * r;
+
+    float discriminant = b * b - 4.0f * a * c;
+    float d_plus;
+
+    if (discriminant < 0.0f) {
+      // Fallback: normalize position directly
+      matvec::vec3 norm_p = V0.normalized();
+      float u = 0.5f + atan2(norm_p.z, norm_p.x) / (2.0f * M_PI);
+      float v = acos(-norm_p.y) / M_PI;
+      mesh.uv.emplace_back(matvec::vec2(u, v));
+      continue;
+    }
+
+    // Use the numerically stable quadratic solution from slide 27
+    float q = -0.5f * (b + (b >= 0 ? 1.0f : -1.0f) * sqrt(discriminant));
+    float d1 = q / a;
+    float d2 = c / q;
+
+    // Pick the positive root (in the direction of the normal)
+    d_plus = (d1 > 0.0f) ? d1 : d2;
+
+    // Intersection point P on the sphere
+    matvec::vec3 P = V0 + N * d_plus;
+
+    // Normalize P onto sphere surface (slide 28)
+    matvec::vec3 Ps = P.normalized() * r;
+
+    // --- Compute (s,t) from spherical coordinates (slide 29) ---
+    float s = acosf(Ps.x / r) / M_PI;
+    float t = atan2f(Ps.z, Ps.y) / M_PI + 0.5f;
+
+    mesh.uv.emplace_back(matvec::vec2(s, t));
   }
 }
 
