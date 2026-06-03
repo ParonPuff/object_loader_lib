@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../deps/matvec/include/types.hpp"
+#include <types.hpp>
 #include <vector>
 
 struct Mesh {
