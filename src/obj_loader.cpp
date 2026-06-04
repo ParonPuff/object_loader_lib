@@ -105,11 +105,16 @@ void ObjLoader::computeUV(Mesh &mesh) {
     // Normalize P onto sphere surface (slide 28)
     matvec::vec3 Ps = P.normalized() * r;
 
-    // --- Compute (s,t) from spherical coordinates (slide 29) ---
-    float s = acosf(Ps.x / r) / M_PI;
-    float t = atan2f(Ps.z, Ps.y) / M_PI + 0.5f;
+    // Longitude
+    float u = atan2f(Ps.z, Ps.x) / (2.0f * M_PI) + 0.5f;
 
-    mesh.uv.emplace_back(matvec::vec2(s, t));
+    // Latitude
+    float v = 0.5f - asinf(Ps.y) / M_PI;
+
+    // Wrap u into [0,1)
+    u -= floorf(u);
+
+    mesh.uv.emplace_back(matvec::vec2(u, v));
   }
   for (int i = 0; i < mesh.indices.size(); i += 3) {
     int i0 = mesh.indices[i];
