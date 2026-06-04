@@ -111,6 +111,40 @@ void ObjLoader::computeUV(Mesh &mesh) {
 
     mesh.uv.emplace_back(matvec::vec2(s, t));
   }
+  for (int i = 0; i < mesh.indices.size(); i += 3) {
+    int i0 = mesh.indices[i];
+    int i1 = mesh.indices[i + 1];
+    int i2 = mesh.indices[i + 2];
+
+    float u0 = mesh.uv[i0].x;
+    float u1 = mesh.uv[i1].x;
+    float u2 = mesh.uv[i2].x;
+
+    // If any edge spans more than 0.5 in u, the triangle crosses the seam
+    // Shift the "low" vertex up by 1 so all three are on the same side
+    if (fabsf(u1 - u0) > 0.5f || fabsf(u2 - u0) > 0.5f || fabsf(u2 - u1) > 0.5f) {
+      // Find the average u; vertices below 0.5 should be shifted to >1
+      float avg = (u0 + u1 + u2) / 3.0f;
+
+      // Duplicate affected vertices with corrected UVs rather than
+      // modifying shared vertices (which would break other triangles)
+      auto fixVertex = [&](int idx, float u) -> int {
+        if ((avg > 0.5f && u < 0.5f) || (avg < 0.5f && u > 0.5f)) {
+          // Create a new vertex copy with the shifted UV
+          mesh.positions.push_back(mesh.positions[idx]);
+          mesh.normals.push_back(mesh.normals[idx]);
+          float newU = (u < 0.5f) ? u + 1.0f : u - 1.0f;
+          mesh.uv.emplace_back(matvec::vec2(newU, mesh.uv[idx].y));
+          return (int)mesh.positions.size() - 1;
+        }
+        return idx;
+      };
+
+      mesh.indices[i]     = fixVertex(i0, u0);
+      mesh.indices[i + 1] = fixVertex(i1, u1);
+      mesh.indices[i + 2] = fixVertex(i2, u2);
+    }
+  }
 }
 
 void ObjLoader::computeNormals(Mesh &mesh) {
