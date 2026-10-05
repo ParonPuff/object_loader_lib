@@ -22,7 +22,8 @@ Mesh ObjLoader::load(const std::string &path, bool normalize) {
   mesh.positions.clear();
   mesh.indices.clear();
   mesh.normals.clear();
-  mesh.uv.clear();
+  // mesh.uv.clear();
+  mesh.spherePoint.clear();
   while (std::getline(file, line)) {
 
     std::stringstream ss(line);
@@ -65,7 +66,8 @@ Mesh ObjLoader::load(const std::string &path, bool normalize) {
   ObjLoader::computeNormals(mesh);
   if (normalize)
     ObjLoader::normalizeMesh(mesh);
-  if (mesh.uv.empty())
+  // if (mesh.uv.empty())
+  if (mesh.spherePoint.empty())
     ObjLoader::computeUV(mesh);
 
   return mesh;
@@ -90,7 +92,8 @@ void ObjLoader::computeUV(Mesh &mesh) {
     }
   }
   radius += 10.0f;
-  mesh.uv.clear();
+  // mesh.uv.clear();
+  mesh.spherePoint.clear();
 
   std::cout << "radius: " << radius << "\n";
   for (int i = 0; i < mesh.positions.size(); i++) {
@@ -136,11 +139,13 @@ void ObjLoader::computeUV(Mesh &mesh) {
     matvec::vec3 pointOnSphere =
         mesh.positions[i] + (mesh.normals[i] * dPositive);
 
-    float s = std::atan2(pointOnSphere.z, pointOnSphere.x) / (2.f * M_PI) + 0.5f; // longitude (u)
-    float t =
-        std::acos(std::clamp(pointOnSphere.y / radius, -1.f, 1.f)) / M_PI; // latitude (v)
+    float s = std::atan2(pointOnSphere.z, pointOnSphere.x) / (2.f * M_PI) +
+              0.5f; // longitude (u)
+    float t = std::acos(std::clamp(pointOnSphere.y / radius, -1.f, 1.f)) /
+              M_PI; // latitude (v)
 
-    mesh.uv.emplace_back(matvec::vec2(s, t));
+    // mesh.uv.emplace_back(matvec::vec2(s, t));
+    mesh.spherePoint.emplace_back(pointOnSphere);
   }
 
   /*
